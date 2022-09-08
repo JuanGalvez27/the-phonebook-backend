@@ -1,10 +1,11 @@
 const http = require('http')
-const express = require('express')
+const express = require('express');
+const { response } = require('express');
 
 const app = express();
 app.use(express.json())
 
-const persons = [
+let persons = [
   { 
     "id": 1,
     "name": "Arto Hellas", 
@@ -32,9 +33,57 @@ app.get('/api/persons', (request, response) =>{
 })
 
 app.get('/info', (req, res) => {
-  res.json(`Phonebook has info for ${persons.length} people`);
-  res.json(new Date.toISOSting());
+  const header = `Phonebook has info for ${persons.length} people`
+  const date = new Date();
+  res.send(header + "<br/><br/>" + date);
 })
+
+app.get('/api/persons/:id', (request, response) => {
+  const id = Number(request.params.id);
+  const person = persons.find(person => person.id === id);
+  if(person){
+  response.json(person);
+  } else {
+    response.status(404).end();
+  }
+})
+
+app.delete('/api/persons/:id', (request, response) => {
+  const id = Number(request.params.id);
+  persons = persons.filter(person => person.id !== id);
+  response.status(204).end();
+})
+
+app.post('/api/persons', (request, response) => {
+  const person = request.body;
+  const ids = persons.map(person => person.id);
+  const maxId = Math.max(...ids);
+  const names = persons.map(person => person.name)
+  const findName = names.find(name => {
+    return name === person.name;
+  })
+  console.log(findName)
+  console.log([names])
+  if(!person.name || !person.number){
+    response.status(400).json({
+      error: "Content missing"
+    });
+  } else if(findName === person.name){
+    response.status(406).json({
+      error: "Name must be unique"
+    })
+  } else {
+    const newPerson = {
+      id: maxId + 1,
+      name: person.name,
+      number: person.number 
+    };
+    persons = [...persons, newPerson];
+    response.status(204).json(newPerson);
+  }
+})
+
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
