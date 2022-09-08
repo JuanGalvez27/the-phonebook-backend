@@ -31,7 +31,12 @@ app.get('/api/persons', (request, response) =>{
   response.json(persons)
 })
 
-const PORT = 3000
+app.get('/info', (req, res) => {
+  res.json(`Phonebook has info for ${persons.length} people`);
+  res.json(new Date.toISOSting());
+})
+
+const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running in port ${PORT}`)
 })
