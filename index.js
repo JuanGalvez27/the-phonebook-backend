@@ -1,6 +1,10 @@
 const http = require('http')
 const express = require('express');
 const { response } = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+const { token } = require('morgan');
+
 
 const app = express();
 app.use(express.json())
@@ -28,6 +32,13 @@ let persons = [
   }
 ]
 
+// Middlewares
+app.use(morgan('tiny'));
+morgan.token("body", function (req, res) {
+  return JSON.stringify(req.body);
+});
+
+
 app.get('/api/persons', (request, response) =>{
   response.json(persons)
 })
@@ -48,13 +59,15 @@ app.get('/api/persons/:id', (request, response) => {
   }
 })
 
+
+
 app.delete('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id);
   persons = persons.filter(person => person.id !== id);
   response.status(204).end();
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', morgan(':body'), (request, response) => {
   const person = request.body;
   const ids = persons.map(person => person.id);
   const maxId = Math.max(...ids);
@@ -62,8 +75,6 @@ app.post('/api/persons', (request, response) => {
   const findName = names.find(name => {
     return name === person.name;
   })
-  console.log(findName)
-  console.log([names])
   if(!person.name || !person.number){
     response.status(400).json({
       error: "Content missing"
@@ -80,6 +91,7 @@ app.post('/api/persons', (request, response) => {
     };
     persons = [...persons, newPerson];
     response.status(204).json(newPerson);
+  
   }
 })
 
